@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-
+import { addPixel } from "@/actions/actions";
 interface Pixel {
   id: number;
   x: number;
@@ -83,6 +83,7 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
         })
       );
     }
+    addPixel(clickedPixel.x, clickedPixel.y, selectedColor);
   };
 
   return (
