@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { addPixel } from "@/actions/actions";
 
 interface Pixel {
   id: number;
@@ -15,8 +14,8 @@ interface GridProps {
 }
 
 const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
-  const gridSize = 63; // Larger grid size
-  const pixelSize = 10; // Same pixel size
+  const gridSize = 63; // Adjust grid size as needed
+  const pixelSize = 10; // Keep pixel size the same
   const totalPixels = gridSize * gridSize;
 
   const [grid, setGrid] = useState<Pixel[]>([]);
@@ -41,7 +40,8 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
     setGrid(initializeFullGrid()); // Initialize grid with all pixels
 
     // Connect to the WebSocket server
-    ws.current = new WebSocket('ws://localhost:8080');
+    const wsUrl = "https://rplace-2260a4bfaead.herokuapp.com";
+    ws.current = new WebSocket(wsUrl);
 
     // Listen for messages from the server
     ws.current.onmessage = (event) => {
@@ -83,9 +83,6 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
         })
       );
     }
-
-    // Optionally, you can still send the update to the database
-    addPixel(clickedPixel.x, clickedPixel.y, selectedColor);
   };
 
   return (
@@ -111,8 +108,6 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
             backgroundColor: pixel.color,
           }}
           onClick={() => handlePixelClick(grid.indexOf(pixel))}
-          onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(90%)")}
-          onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(100%)")}
         />
       ))}
     </div>
