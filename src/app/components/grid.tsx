@@ -22,10 +22,14 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
   const ws = useRef<WebSocket | null>(null); // WebSocket reference
 
   const initializeFullGrid = () => {
+    console.log("Initializing grid...");
     const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
       const x = index % gridSize;
       const y = Math.floor(index / gridSize);
       const existingPixel = initialPixels.find(pixel => pixel.x === x && pixel.y === y);
+      if (existingPixel) {
+        console.log(`Mapped pixel at (${x}, ${y}):`, existingPixel);
+      }
       return {
         id: index,
         x,
@@ -33,10 +37,13 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
         color: existingPixel ? existingPixel.color : "#ffffff", // Default to white if no pixel is placed
       };
     });
+    console.log("Final grid:", newGrid);
     return newGrid;
   };
+  
 
   useEffect(() => {
+    console.log("initialPixels in useEffect:", initialPixels);
     setGrid(initializeFullGrid()); // Initialize grid with all pixels
 
     // Connect to the WebSocket server
