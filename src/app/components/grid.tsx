@@ -19,8 +19,12 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
   const pixelSize = 10; // Keep pixel size the same
   const totalPixels = gridSize * gridSize;
 
-  const [grid, setGrid] = useState<Pixel[]>(() => {
-    // Initialize the grid based on initialPixels
+  const [grid, setGrid] = useState<Pixel[]>([]); // Initialize with an empty grid
+
+  const ws = useRef<WebSocket | null>(null); // WebSocket reference
+
+  const initializeFullGrid = () => {
+    console.log("Initializing grid with initialPixels...");
     const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
       const x = index % gridSize;
       const y = Math.floor(index / gridSize);
@@ -33,11 +37,12 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
       };
     });
     return newGrid;
-  });
-
-  const ws = useRef<WebSocket | null>(null); // WebSocket reference
+  };
 
   useEffect(() => {
+    console.log("initialPixels in useEffect:", initialPixels);
+    setGrid(initializeFullGrid()); // Re-initialize grid whenever initialPixels changes
+
     // Connect to the WebSocket server
     const wsUrl = "https://rplace-2260a4bfaead.herokuapp.com";
     ws.current = new WebSocket(wsUrl);
@@ -60,7 +65,7 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
         ws.current.close();
       }
     };
-  }, []);
+  }, [initialPixels]); // Depend on initialPixels so it updates when they change
 
   const handlePixelClick = (index: number) => {
     const clickedPixel = grid[index];
@@ -82,7 +87,6 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
         })
       );
     }
-    // Save to the database
     addPixel(clickedPixel.x, clickedPixel.y, selectedColor);
   };
 
