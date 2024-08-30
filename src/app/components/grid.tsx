@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import prisma from "@/lib/db"; // Import your Prisma client
+import React, { useState, useEffect, useRef } from "react";
+import { addPixel } from "@/actions/actions";
 
 interface Pixel {
   id: number;
@@ -20,10 +20,12 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
 
   const [grid, setGrid] = useState<Pixel[]>([]); // Initialize with an empty grid
 
-  // Function to fetch pixels directly inside the component
+  const ws = useRef<WebSocket | null>(null); // WebSocket reference
+
   const fetchPixels = async () => {
     try {
-      const pixels = await prisma.pixel.findMany(); // Directly query Prisma from here
+      const response = await fetch('/api/pixels');
+      const pixels: Pixel[] = await response.json(); // Parse the response only once
       console.log("Fetched pixels:", pixels);
 
       const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
@@ -46,6 +48,25 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
 
   useEffect(() => {
     fetchPixels(); // Fetch pixels on component mount
+
+    const wsUrl = "https://rplace-2260a4bfaead.herokuapp.com";
+    ws.current = new WebSocket(wsUrl);
+
+    ws.current.onmessage = (event) => {
+      const updatedPixel: Pixel = JSON.parse(event.data);
+
+      setGrid(prevGrid =>
+        prevGrid.map(pixel =>
+          pixel.x === updatedPixel.x && pixel.y === updatedPixel.y ? updatedPixel : pixel
+        )
+      );
+    };
+
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
   }, []); // No dependency array, to fetch only once when the component mounts
 
   const handlePixelClick = (index: number) => {
@@ -56,43 +77,44 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
     newGrid[index].color = selectedColor;
     setGrid(newGrid);
 
-    // You can add the WebSocket logic and API call here if needed
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(
+        JSON.stringify({
+          id: clickedPixel.id,
+          x: clickedPixel.x,
+          y: clickedPixel.y,
+          color: selectedColor,
+        })
+      );
+    }
+    addPixel(clickedPixel.x, clickedPixel.y, selectedColor);
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div
-        className="grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${gridSize}, ${pixelSize}px)`,
-          gridTemplateRows: `repeat(${gridSize}, ${pixelSize}px)`,
-          gap: "0px",
-          padding: "0px",
-          backgroundColor: "#ffffff",
-          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-        }}
-      >
-        {grid.map((pixel) => (
-          <div
-            key={pixel.id}
-            className="cursor-pointer transition-filter duration-200"
-            style={{
-              width: `${pixelSize}px`,
-              height: `${pixelSize}px`,
-              backgroundColor: pixel.color,
-            }}
-            onClick={() => handlePixelClick(grid.indexOf(pixel))}
-          />
-        ))}
-      </div>
-      <p className="mt-4 text-center">
-        {grid.map(pixel => (
-          <span key={pixel.id}>
-            ({pixel.x}, {pixel.y}): {pixel.color} <br />
-          </span>
-        ))}
-      </p>
+    <div
+      className="grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${gridSize}, ${pixelSize}px)`,
+        gridTemplateRows: `repeat(${gridSize}, ${pixelSize}px)`,
+        gap: "0px",
+        padding: "0px",
+        backgroundColor: "#ffffff",
+        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+      }}
+    >
+      {grid.map((pixel) => (
+        <div
+          key={pixel.id}
+          className="cursor-pointer transition-filter duration-200"
+          style={{
+            width: `${pixelSize}px`,
+            height: `${pixelSize}px`,
+            backgroundColor: pixel.color,
+          }}
+          onClick={() => handlePixelClick(grid.indexOf(pixel))}
+        />
+      ))}
     </div>
   );
 };
