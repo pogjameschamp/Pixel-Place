@@ -22,17 +22,31 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
 
   const ws = useRef<WebSocket | null>(null); // WebSocket reference
 
-  async function fetchPixels() {
+  const fetchPixels = async () => {
     try {
       const response = await fetch('/api/pixels');
       const data = await response.json();
       console.log("Fetched pixels:", data);
+
+      const pixels: Pixel[] = await response.json();
+
+      const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
+        const x = index % gridSize;
+        const y = Math.floor(index / gridSize);
+        const existingPixel = pixels.find(pixel => pixel.x === x && pixel.y === y);
+        return {
+          id: index,
+          x,
+          y,
+          color: existingPixel ? existingPixel.color : "#ffffff",
+        };
+      });
+
+      setGrid(newGrid);
     } catch (error) {
-      console.error("Error fetching pixels:", error);
+      console.error("Failed to fetch pixels:", error);
     }
-  }
-  
-  fetchPixels();
+  };
   
 
   useEffect(() => {
