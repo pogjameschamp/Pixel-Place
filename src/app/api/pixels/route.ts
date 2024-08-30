@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
+export const revalidate = 0; // Revalidate on every request (this might not be necessary with the cache-control headers)
+
 export async function GET() {
   try {
     console.log("Fetching pixels from database...");
