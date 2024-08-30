@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Grid from './components/grid';
+import Grid from '../components/grid';
 import ColorPicker from '@/components/colourpicker';
 
 const ClientPage: React.FC = () => {

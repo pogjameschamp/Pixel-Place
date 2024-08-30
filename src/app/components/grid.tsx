@@ -108,7 +108,7 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
       {grid.map((pixel) => (
         <div
           key={pixel.id}
-          className="cursor-pointer transition-filter duration-200"
+          className="cursor-pointer transition-filter duration-200 hover:brightness-75"
           style={{
             width: `${pixelSize}px`,
             height: `${pixelSize}px`,
