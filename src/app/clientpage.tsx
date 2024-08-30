@@ -3,18 +3,7 @@ import React, { useState } from "react";
 import Grid from './components/grid';
 import ColorPicker from '@/components/colourpicker';
 
-interface Pixel {
-  id: number;
-  x: number;
-  y: number;
-  color: string;
-}
-
-interface ClientPageProps {
-  pixels: Pixel[];
-}
-
-const ClientPage: React.FC<ClientPageProps> = ({ pixels }) => {
+const ClientPage: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState<string>("#000000");
 
   return (
@@ -22,7 +11,7 @@ const ClientPage: React.FC<ClientPageProps> = ({ pixels }) => {
       {/* Grid Container */}
       <div className="flex items-center justify-center w-full h-full">
         <div className="max-w-full max-h-full">
-          <Grid selectedColor={selectedColor} initialPixels={pixels} />
+          <Grid selectedColor={selectedColor} />
         </div>
       </div>
 
@@ -33,6 +22,6 @@ const ClientPage: React.FC<ClientPageProps> = ({ pixels }) => {
       />
     </div>
   );
-}
+};
 
 export default ClientPage;

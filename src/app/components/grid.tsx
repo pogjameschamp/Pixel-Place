@@ -11,47 +11,49 @@ interface Pixel {
 
 interface GridProps {
   selectedColor: string;
-  initialPixels: Pixel[];
 }
 
-const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
+const Grid: React.FC<GridProps> = ({ selectedColor }) => {
   const gridSize = 63; // Adjust grid size as needed
   const pixelSize = 10; // Keep pixel size the same
   const totalPixels = gridSize * gridSize;
 
-  const [grid, setGrid] = useState<Pixel[]>([]); // Initialize with an empty grid
+  const [grid, setGrid] = useState<Pixel[]>([]);
 
   const ws = useRef<WebSocket | null>(null); // WebSocket reference
 
-  const initializeFullGrid = () => {
-    console.log("Initializing grid with initialPixels...");
-    const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
-      const x = index % gridSize;
-      const y = Math.floor(index / gridSize);
-      const existingPixel = initialPixels.find(pixel => pixel.x === x && pixel.y === y);
-      return {
-        id: index,
-        x,
-        y,
-        color: existingPixel ? existingPixel.color : "#ffffff",
-      };
-    });
-    return newGrid;
+  const fetchPixels = async () => {
+    try {
+      const response = await fetch('/api/pixels');
+      const pixels: Pixel[] = await response.json();
+
+      const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
+        const x = index % gridSize;
+        const y = Math.floor(index / gridSize);
+        const existingPixel = pixels.find(pixel => pixel.x === x && pixel.y === y);
+        return {
+          id: index,
+          x,
+          y,
+          color: existingPixel ? existingPixel.color : "#ffffff",
+        };
+      });
+
+      setGrid(newGrid);
+    } catch (error) {
+      console.error("Failed to fetch pixels:", error);
+    }
   };
 
   useEffect(() => {
-    console.log("initialPixels in useEffect:", initialPixels);
-    setGrid(initializeFullGrid()); // Re-initialize grid whenever initialPixels changes
+    fetchPixels(); // Fetch pixels on component mount
 
-    // Connect to the WebSocket server
     const wsUrl = "https://rplace-2260a4bfaead.herokuapp.com";
     ws.current = new WebSocket(wsUrl);
 
-    // Listen for messages from the server
     ws.current.onmessage = (event) => {
       const updatedPixel: Pixel = JSON.parse(event.data);
 
-      // Update the grid with the new pixel data
       setGrid(prevGrid =>
         prevGrid.map(pixel =>
           pixel.x === updatedPixel.x && pixel.y === updatedPixel.y ? updatedPixel : pixel
@@ -59,24 +61,21 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
       );
     };
 
-    // Clean up WebSocket connection on unmount
     return () => {
       if (ws.current) {
         ws.current.close();
       }
     };
-  }, [initialPixels]); // Depend on initialPixels so it updates when they change
+  }, []);
 
   const handlePixelClick = (index: number) => {
     const clickedPixel = grid[index];
     console.log(`Clicked pixel at X: ${clickedPixel.x}, Y: ${clickedPixel.y}`);
 
-    // Update pixel color locally
     const newGrid = [...grid];
     newGrid[index].color = selectedColor;
     setGrid(newGrid);
 
-    // Send the pixel data to the server via WebSocket
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(
         JSON.stringify({
