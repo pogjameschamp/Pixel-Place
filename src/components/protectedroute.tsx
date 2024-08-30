@@ -11,8 +11,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/login') {
-      router.push('/login');
+    if (!loading && !user && pathname !== '/') {
+      router.push('/');
     }
   }, [user, loading, router, pathname]);
 
@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <div>Loading...</div>;
   }
 
-  return (pathname === '/login' || user) ? <>{children}</> : null;
+  return (pathname === '/' || user) ? <>{children}</> : null;
 };
 
 export default ProtectedRoute;
