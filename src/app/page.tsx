@@ -3,7 +3,7 @@ import ClientPage from './clientpage';
 
 export default async function HomePage() {
   const pixelsFromDb = await prisma.pixel.findMany();
-
+  console.log("Fetched pixels from DB:", pixelsFromDb);
   const pixels = pixelsFromDb.map(pixel => ({
     id: pixel.id,
     x: pixel.x,
