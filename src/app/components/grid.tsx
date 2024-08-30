@@ -18,17 +18,15 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
   const pixelSize = 10; // Keep pixel size the same
   const totalPixels = gridSize * gridSize;
 
-  const [grid, setGrid] = useState<Pixel[]>([]);
+  const [grid, setGrid] = useState<Pixel[]>([]); // Initialize with an empty grid
 
   const ws = useRef<WebSocket | null>(null); // WebSocket reference
 
   const fetchPixels = async () => {
     try {
       const response = await fetch('/api/pixels');
-      const data = await response.json();
-      console.log("Fetched pixels:", data);
-
-      const pixels: Pixel[] = await response.json();
+      const pixels: Pixel[] = await response.json(); // Parse the response only once
+      console.log("Fetched pixels:", pixels);
 
       const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
         const x = index % gridSize;
@@ -47,7 +45,6 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
       console.error("Failed to fetch pixels:", error);
     }
   };
-  
 
   useEffect(() => {
     fetchPixels(); // Fetch pixels on component mount
@@ -70,7 +67,7 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
         ws.current.close();
       }
     };
-  }, []);
+  }, []); // No dependency array, to fetch only once when the component mounts
 
   const handlePixelClick = (index: number) => {
     const clickedPixel = grid[index];
