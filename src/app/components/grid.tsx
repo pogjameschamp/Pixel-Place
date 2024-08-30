@@ -24,7 +24,9 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
 
   const fetchPixels = async () => {
     try {
-      const response = await fetch('/api/pixels');
+      const response = await fetch('/api/pixels', {
+        cache: 'no-store', // Ensure no cache
+      });
       const pixels: Pixel[] = await response.json(); // Parse the response only once
       console.log("Fetched pixels:", pixels);
 
