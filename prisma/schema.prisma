@@ -12,10 +12,21 @@ datasource db {
 }
 
 model Pixel {
-  id      Int    @id @default(autoincrement())
-  x       Int
-  y       Int
-  color   String
+  id        Int      @id @default(autoincrement())
+  x         Int
+  y         Int
+  color     String
+  userId    String   // Foreign key to User
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+
+  user      User?     @relation(fields: [userId], references: [id]) // Corrected relation field
 }
+
+model User {
+  id      String   @id @default(uuid()) // UUID as the primary key
+  name    String
+  email   String   @unique
+  pixels  Pixel[]  // Relation field, correctly related to Pixel model
+}
+

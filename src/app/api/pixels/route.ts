@@ -2,12 +2,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
-export const revalidate = 0; // Revalidate on every request (this might not be necessary with the cache-control headers)
-
 export async function GET() {
   try {
     console.log("Fetching pixels from database...");
-    const pixels = await prisma.pixel.findMany();
+    const pixels = await prisma.pixel.findMany({
+      include: {
+        user: true, // Include the associated user information
+      },
+    });
     console.log("Pixels fetched:", pixels);
 
     const response = NextResponse.json(pixels);

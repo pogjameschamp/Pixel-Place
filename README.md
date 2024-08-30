@@ -37,9 +37,14 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 TO DO:
 easy:
-[] Add auth with firebase
-[] Add Wrapper so that you can only add pixel if logged in
-[] add small square next to input to show colour
+[X] Add auth with firebase
+[X] Add Wrapper so that you can only add pixel if logged in
+[X] add small square next to input to show colour
 [] Fix styling of input
 hard:
 [] Add hover feature on pixel to see who placed it and when
+
+- Change add pixel to database
+    - incorporate the firebase userid
+- Retrieval should be the same
+- change initialize grid to incorporate hovercards

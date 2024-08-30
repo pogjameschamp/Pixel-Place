@@ -1,6 +1,9 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { addPixel } from "@/actions/actions";
+import { auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+
 
 interface Pixel {
   id: number;
@@ -17,6 +20,7 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
   const gridSize = 63; // Adjust grid size as needed
   const pixelSize = 10; // Keep pixel size the same
   const totalPixels = gridSize * gridSize;
+  const [user] = useAuthState(auth);
 
   const [grid, setGrid] = useState<Pixel[]>([]); // Initialize with an empty grid
 
@@ -74,11 +78,11 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
   const handlePixelClick = (index: number) => {
     const clickedPixel = grid[index];
     console.log(`Clicked pixel at X: ${clickedPixel.x}, Y: ${clickedPixel.y}`);
-
+  
     const newGrid = [...grid];
     newGrid[index].color = selectedColor;
     setGrid(newGrid);
-
+  
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(
         JSON.stringify({
@@ -89,8 +93,17 @@ const Grid: React.FC<GridProps> = ({ selectedColor }) => {
         })
       );
     }
-    addPixel(clickedPixel.x, clickedPixel.y, selectedColor);
+  
+    const userId = user?.uid || ""; // Ensure this is the correct user ID
+    if (userId) {
+      addPixel(clickedPixel.x, clickedPixel.y, selectedColor, userId)
+        .then(() => console.log("Pixel added successfully"))
+        .catch((error) => console.error("Failed to add pixel:", error));
+    } else {
+      console.error("User ID is not defined");
+    }
   };
+  
 
   return (
     <div
