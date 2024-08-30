@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { addPixel } from "@/actions/actions";
+
 interface Pixel {
   id: number;
   x: number;
@@ -18,34 +19,25 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
   const pixelSize = 10; // Keep pixel size the same
   const totalPixels = gridSize * gridSize;
 
-  const [grid, setGrid] = useState<Pixel[]>([]);
-  const ws = useRef<WebSocket | null>(null); // WebSocket reference
-
-  const initializeFullGrid = () => {
-    console.log("Initializing grid...");
+  const [grid, setGrid] = useState<Pixel[]>(() => {
+    // Initialize the grid based on initialPixels
     const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
       const x = index % gridSize;
       const y = Math.floor(index / gridSize);
       const existingPixel = initialPixels.find(pixel => pixel.x === x && pixel.y === y);
-      if (existingPixel) {
-        console.log(`Mapped pixel at (${x}, ${y}):`, existingPixel);
-      }
       return {
         id: index,
         x,
         y,
-        color: existingPixel ? existingPixel.color : "#ffffff", // Default to white if no pixel is placed
+        color: existingPixel ? existingPixel.color : "#ffffff",
       };
     });
-    console.log("Final grid:", newGrid);
     return newGrid;
-  };
-  
+  });
+
+  const ws = useRef<WebSocket | null>(null); // WebSocket reference
 
   useEffect(() => {
-    console.log("initialPixels in useEffect:", initialPixels);
-    setGrid(initializeFullGrid()); // Initialize grid with all pixels
-
     // Connect to the WebSocket server
     const wsUrl = "https://rplace-2260a4bfaead.herokuapp.com";
     ws.current = new WebSocket(wsUrl);
@@ -68,7 +60,7 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
         ws.current.close();
       }
     };
-  }, [initialPixels]);
+  }, []);
 
   const handlePixelClick = (index: number) => {
     const clickedPixel = grid[index];
@@ -90,6 +82,7 @@ const Grid: React.FC<GridProps> = ({ selectedColor, initialPixels }) => {
         })
       );
     }
+    // Save to the database
     addPixel(clickedPixel.x, clickedPixel.y, selectedColor);
   };
 
