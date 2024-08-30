@@ -1,7 +1,7 @@
 import prisma from '@/lib/db';
 import ClientPage from './clientpage';
 
-export async function getServerSideProps() { // Use getServerSideProps instead of getStaticProps
+export default async function HomePage() {
   try {
     const pixelsFromDb = await prisma.pixel.findMany();
     console.log("Fetched pixels from DB (Production):", pixelsFromDb);
@@ -13,23 +13,9 @@ export async function getServerSideProps() { // Use getServerSideProps instead o
       color: pixel.color,
     }));
 
-    return {
-      props: {
-        pixels,
-      },
-    };
+    return <ClientPage pixels={pixels} />;
   } catch (error) {
     console.error("Error fetching pixels in production:", error);
-    return {
-      props: {
-        pixels: [], // Fallback in case of error
-      }
-    };
+    return <div>Error loading pixels</div>;
   }
-}
-
-export default function HomePage({ pixels }: { pixels: any[] }) {
-  return (
-    <ClientPage pixels={pixels} />
-  );
 }
