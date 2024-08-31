@@ -11,15 +11,15 @@ const ClientPage: React.FC = () => {
       {/* Grid Container */}
       <div className="flex items-center justify-center w-full h-full">
         <div className="max-w-full max-h-full">
-          <Grid selectedColor={selectedColor} />
+          <Grid/>
         </div>
       </div>
 
       {/* Color Picker in the Bottom Left */}
-      <ColorPicker
+      {/* <ColorPicker
         selectedColor={selectedColor}
         onColorChange={(color: string) => setSelectedColor(color)}
-      />
+      /> */}
     </div>
   );
 };

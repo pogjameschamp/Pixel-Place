@@ -1,36 +1,40 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { addPixel, fetchPixels } from "@/actions/actions";
 import { auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { FixedSizeGrid as Grid } from 'react-window';
+import { createPortal } from "react-dom";
+import { Input } from "@/components/ui/input";
+import debounce from 'lodash/debounce';
 
 interface Pixel {
   id: number;
   x: number;
   y: number;
   color: string;
+  user?: { id: string; name: string; email: string } | null;
 }
 
-interface GridProps {
-  selectedColor: string;
-}
-
-const GridComponent: React.FC<GridProps> = ({ selectedColor }) => {
+const GridComponent: React.FC = () => {
   const gridSize = 63;
   const pixelSize = 10;
   const totalPixels = gridSize * gridSize;
   const [user] = useAuthState(auth);
   const [grid, setGrid] = useState<Pixel[]>([]);
   const ws = useRef<WebSocket | null>(null);
+  const [hoveredPixel, setHoveredPixel] = useState<Pixel | null>(null);
+  const [hoverPosition, setHoverPosition] = useState<{ x: number, y: number } | null>(null);
+  const [currentColor, setCurrentColor] = useState<string>("#000000"); // State to show real-time color
+  const selectedColorRef = useRef<string>(currentColor); // Store the selected color in a ref
 
-  const loadPixels = async () => {
+  const loadPixels = useCallback(async () => {
     const cachedPixels = localStorage.getItem('pixels');
     if (cachedPixels) {
       setGrid(JSON.parse(cachedPixels));
     }
 
-    const fetchedPixels = await fetchPixels(); // Call the server action
+    const fetchedPixels = await fetchPixels();
     const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
       const x = index % gridSize;
       const y = Math.floor(index / gridSize);
@@ -40,15 +44,16 @@ const GridComponent: React.FC<GridProps> = ({ selectedColor }) => {
         x,
         y,
         color: existingPixel ? existingPixel.color : "#ffffff",
+        user: existingPixel?.user || null,
       };
     });
 
     setGrid(newGrid);
-    localStorage.setItem('pixels', JSON.stringify(newGrid)); // Cache the new grid
-  };
+    localStorage.setItem('pixels', JSON.stringify(newGrid));
+  }, [gridSize, totalPixels]);
 
   useEffect(() => {
-    loadPixels(); // Load pixels on component mount
+    loadPixels();
 
     const wsUrl = "https://rplace-2260a4bfaead.herokuapp.com";
     ws.current = new WebSocket(wsUrl);
@@ -67,14 +72,14 @@ const GridComponent: React.FC<GridProps> = ({ selectedColor }) => {
         ws.current.close();
       }
     };
-  }, []);
+  }, [loadPixels]);
 
-  const handlePixelClick = (index: number) => {
+  const handlePixelClick = useCallback((index: number) => {
     const clickedPixel = grid[index];
     const newGrid = [...grid];
-    newGrid[index].color = selectedColor;
+    newGrid[index].color = selectedColorRef.current;
     setGrid(newGrid);
-    localStorage.setItem('pixels', JSON.stringify(newGrid)); // Update cache
+    localStorage.setItem('pixels', JSON.stringify(newGrid));
 
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(
@@ -82,54 +87,123 @@ const GridComponent: React.FC<GridProps> = ({ selectedColor }) => {
           id: clickedPixel.id,
           x: clickedPixel.x,
           y: clickedPixel.y,
-          color: selectedColor,
+          color: selectedColorRef.current,
         })
       );
     }
 
     const userId = user?.uid || "";
     if (userId) {
-      addPixel(clickedPixel.x, clickedPixel.y, selectedColor, userId)
+      addPixel(clickedPixel.x, clickedPixel.y, selectedColorRef.current, userId)
         .then(() => console.log("Pixel added successfully"))
         .catch((error) => console.error("Failed to add pixel:", error));
     } else {
       console.error("User ID is not defined");
     }
-  };
+  }, [grid, user]);
 
-  const Cell = ({ columnIndex, rowIndex, style }: { columnIndex: number; rowIndex: number; style: React.CSSProperties }) => {
-    const pixelIndex = rowIndex * gridSize + columnIndex;
-    const pixel = grid[pixelIndex];
-    const backgroundColor = pixel ? pixel.color : "#ffffff";
+  const handleMouseEnter = useCallback((pixel: Pixel, event: React.MouseEvent) => {
+    setHoveredPixel(pixel);
+    setHoverPosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
+  }, []);
 
-    return (
-      <div
-        style={{
-          ...style,
-          width: `${pixelSize}px`,
-          height: `${pixelSize}px`,
-          backgroundColor: backgroundColor,
-          cursor: "pointer",
-          transition: "filter 0.2s",
-        }}
-        onClick={() => pixel && handlePixelClick(pixel.id)}
-        className="hover:brightness-75"
-      />
-    );
-  };
+  const handleMouseLeave = useCallback(() => {
+    setHoveredPixel(null);
+    setHoverPosition(null);
+  }, []);
+
+  const handleColorChange = useCallback((color: string) => {
+    setCurrentColor(color); // Update the real-time color display
+    debouncedColorChange(color); // Debounce the update to selectedColorRef
+  }, []);
+
+  // Debounce the actual color change to minimize updates
+  const debouncedColorChange = useCallback(debounce((color: string) => {
+    selectedColorRef.current = color;
+  }, 300), []);
+
+  const Cell = useMemo(() => {
+    return ({ columnIndex, rowIndex, style }: { columnIndex: number; rowIndex: number; style: React.CSSProperties }) => {
+      const pixelIndex = rowIndex * gridSize + columnIndex;
+      const pixel = grid[pixelIndex];
+      const backgroundColor = pixel ? pixel.color : "#ffffff";
+
+      return (
+        <div
+          style={style}
+          className="cell-wrapper"
+          onMouseEnter={(e) => pixel && handleMouseEnter(pixel, e)}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div
+            style={{
+              width: `${pixelSize}px`,
+              height: `${pixelSize}px`,
+              backgroundColor: backgroundColor,
+              cursor: "pointer",
+              transition: "filter 0.2s",
+            }}
+            onClick={() => pixel && handlePixelClick(pixelIndex)}
+            className="hover:brightness-75"
+          />
+        </div>
+      );
+    };
+  }, [grid, handleMouseEnter, handleMouseLeave, handlePixelClick]);
 
   return (
-    <div className="grid-container">
-      <Grid
-        columnCount={gridSize}
-        columnWidth={pixelSize}
-        height={gridSize * pixelSize}
-        rowCount={gridSize}
-        rowHeight={pixelSize}
-        width={gridSize * pixelSize}
-      >
-        {Cell}
-      </Grid>
+    <div className="relative w-full h-screen bg-gray-100 overflow-visible">
+      {/* Grid Container */}
+      <div className="flex items-center justify-center w-full h-full">
+        <div className="max-w-full max-h-full">
+          <Grid
+            columnCount={gridSize}
+            columnWidth={pixelSize}
+            height={gridSize * pixelSize}
+            rowCount={gridSize}
+            rowHeight={pixelSize}
+            width={gridSize * pixelSize}
+          >
+            {Cell}
+          </Grid>
+        </div>
+      </div>
+
+      {/* Color Picker in the Bottom Left */}
+      <div className="fixed bottom-20 left-20 flex items-center space-x-4">
+        <Input
+          type="text"
+          value={currentColor}
+          onChange={(e) => handleColorChange(e.target.value)}
+          placeholder="#ffcccc"
+          className="w-40 h-12 text-lg p-4"
+        />
+        <div
+          className="w-12 h-12 border border-gray-300 rounded-md shadow-md"
+          style={{ backgroundColor: currentColor }}
+        />
+      </div>
+
+      {hoveredPixel && hoverPosition && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: hoverPosition.y + 10, // Adjust to position below cursor
+            left: hoverPosition.x + 10,
+            backgroundColor: 'white',
+            padding: '8px',
+            borderRadius: '4px',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+            zIndex: 1000,
+          }}
+        >
+          <p>Placed by: {hoveredPixel.user ? hoveredPixel.user.name : "No User"}</p>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
