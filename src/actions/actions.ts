@@ -42,3 +42,17 @@ export async function createUser({ id, name, email }: { id: string, name: string
 
   return user;
 }
+
+export async function fetchPixels() {
+    try {
+      const pixels = await prisma.pixel.findMany({
+        include: {
+          user: true,
+        },
+      });
+      return pixels;
+    } catch (error) {
+      console.error("Error fetching pixels:", error);
+      throw new Error("Failed to fetch pixels");
+    }
+  }

@@ -41,10 +41,12 @@ easy:
 [X] Add Wrapper so that you can only add pixel if logged in
 [X] add small square next to input to show colour
 [] Fix styling of input
+
 hard:
 [] Add hover feature on pixel to see who placed it and when
-
-- Change add pixel to database
-    - incorporate the firebase userid
-- Retrieval should be the same
-- change initialize grid to incorporate hovercards
+[] Add coverpage for new users. 
+    - perhaps what the grid looks like rn + sign in with google to place a pixel!
+[] Understand database truly
+    - 1 to 1 relationship, one pixel has one user only
+[] interaction when someone else presses on the pixel.
+    - does the pixel go away from the first person who pressed it?
