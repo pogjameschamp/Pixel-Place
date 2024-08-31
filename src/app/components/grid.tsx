@@ -25,6 +25,11 @@ const GridComponent: React.FC<GridProps> = ({ selectedColor }) => {
   const ws = useRef<WebSocket | null>(null);
 
   const loadPixels = async () => {
+    const cachedPixels = localStorage.getItem('pixels');
+    if (cachedPixels) {
+      setGrid(JSON.parse(cachedPixels));
+    }
+
     const fetchedPixels = await fetchPixels(); // Call the server action
     const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
       const x = index % gridSize;
@@ -37,7 +42,9 @@ const GridComponent: React.FC<GridProps> = ({ selectedColor }) => {
         color: existingPixel ? existingPixel.color : "#ffffff",
       };
     });
+
     setGrid(newGrid);
+    localStorage.setItem('pixels', JSON.stringify(newGrid)); // Cache the new grid
   };
 
   useEffect(() => {
@@ -67,6 +74,7 @@ const GridComponent: React.FC<GridProps> = ({ selectedColor }) => {
     const newGrid = [...grid];
     newGrid[index].color = selectedColor;
     setGrid(newGrid);
+    localStorage.setItem('pixels', JSON.stringify(newGrid)); // Update cache
 
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(
@@ -111,17 +119,7 @@ const GridComponent: React.FC<GridProps> = ({ selectedColor }) => {
   };
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${gridSize}, ${pixelSize}px)`,
-        gridTemplateRows: `repeat(${gridSize}, ${pixelSize}px)`,
-        gap: "0px",
-        padding: "0px",
-        backgroundColor: "#ffffff",
-        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-      }}
-    >
+    <div className="grid-container">
       <Grid
         columnCount={gridSize}
         columnWidth={pixelSize}
