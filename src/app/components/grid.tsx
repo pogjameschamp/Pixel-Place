@@ -25,8 +25,8 @@ const GridComponent: React.FC = () => {
   const ws = useRef<WebSocket | null>(null);
   const [hoveredPixel, setHoveredPixel] = useState<Pixel | null>(null);
   const [hoverPosition, setHoverPosition] = useState<{ x: number, y: number } | null>(null);
-  const [currentColor, setCurrentColor] = useState<string>("#000000"); // State to show real-time color
-  const selectedColorRef = useRef<string>(currentColor); // Store the selected color in a ref
+  const [currentColor, setCurrentColor] = useState<string>("#000000");
+  const selectedColorRef = useRef<string>(currentColor);
 
   const loadPixels = useCallback(async () => {
     const cachedPixels = localStorage.getItem('pixels');
@@ -54,61 +54,84 @@ const GridComponent: React.FC = () => {
 
   useEffect(() => {
     loadPixels();
-
-    const wsUrl = "https://rplace-2260a4bfaead.herokuapp.com";
+  
+    const wsUrl = "wss://rplace-2260a4bfaead.herokuapp.com";
     ws.current = new WebSocket(wsUrl);
-
+  
     ws.current.onmessage = (event) => {
       const updatedPixel: Pixel = JSON.parse(event.data);
-      setGrid(prevGrid =>
-        prevGrid.map(pixel =>
+      console.log('Received updated pixel:', updatedPixel);
+  
+      setGrid((prevGrid) =>
+        prevGrid.map((pixel) =>
           pixel.x === updatedPixel.x && pixel.y === updatedPixel.y ? updatedPixel : pixel
         )
       );
     };
-
+  
     return () => {
       if (ws.current) {
         ws.current.close();
       }
     };
   }, [loadPixels]);
+  
 
-  const handlePixelClick = useCallback((index: number) => {
-    const clickedPixel = grid[index];
-    const newGrid = [...grid];
-    newGrid[index].color = selectedColorRef.current;
-    setGrid(newGrid);
-    localStorage.setItem('pixels', JSON.stringify(newGrid));
+  const handlePixelClick = useCallback(
+    (index: number) => {
+      const clickedPixel = grid[index];
+      const newGrid = [...grid];
+      newGrid[index].color = selectedColorRef.current;
+      setGrid(newGrid);
+      localStorage.setItem("pixels", JSON.stringify(newGrid));
+  
+      const userId = user?.uid || "";
+      const userName = user?.displayName || "Unknown User";
+  
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(
+          JSON.stringify({
+            id: clickedPixel.id,
+            x: clickedPixel.x,
+            y: clickedPixel.y,
+            color: selectedColorRef.current,
+            user: { id: userId, name: userName }, // Send user data along with pixel info
+          })
+        );
+      }
+  
+      // If you also want to save it to your database via API or another function call
+      if (userId) {
+        addPixel(clickedPixel.x, clickedPixel.y, selectedColorRef.current, userId)
+          .then((pixelWithUser) => {
+            // This block is optional if your WebSocket message is fast enough.
+            setGrid((prevGrid) =>
+              prevGrid.map((pixel) =>
+                pixel.x === pixelWithUser.x && pixel.y === pixelWithUser.y
+                  ? pixelWithUser
+                  : pixel
+              )
+            );
+          })
+          .catch((error) => console.error("Failed to add pixel:", error));
+      } else {
+        console.error("User ID is not defined");
+      }
+    },
+    [grid, user]
+  );
+  
 
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(
-        JSON.stringify({
-          id: clickedPixel.id,
-          x: clickedPixel.x,
-          y: clickedPixel.y,
-          color: selectedColorRef.current,
-        })
-      );
-    }
-
-    const userId = user?.uid || "";
-    if (userId) {
-      addPixel(clickedPixel.x, clickedPixel.y, selectedColorRef.current, userId)
-        .then(() => console.log("Pixel added successfully"))
-        .catch((error) => console.error("Failed to add pixel:", error));
-    } else {
-      console.error("User ID is not defined");
-    }
-  }, [grid, user]);
-
-  const handleMouseEnter = useCallback((pixel: Pixel, event: React.MouseEvent) => {
-    setHoveredPixel(pixel);
-    setHoverPosition({
-      x: event.clientX,
-      y: event.clientY,
-    });
-  }, []);
+  const handleMouseEnter = useCallback(
+    (pixel: Pixel, event: React.MouseEvent) => {
+      setHoveredPixel(pixel);
+      setHoverPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    []
+  );
 
   const handleMouseLeave = useCallback(() => {
     setHoveredPixel(null);
@@ -116,17 +139,20 @@ const GridComponent: React.FC = () => {
   }, []);
 
   const handleColorChange = useCallback((color: string) => {
-    setCurrentColor(color); // Update the real-time color display
-    debouncedColorChange(color); // Debounce the update to selectedColorRef
+    setCurrentColor(color);
+    selectedColorRef.current = color;
   }, []);
 
-  // Debounce the actual color change to minimize updates
-  const debouncedColorChange = useCallback(debounce((color: string) => {
-    selectedColorRef.current = color;
-  }, 300), []);
-
   const Cell = useMemo(() => {
-    return ({ columnIndex, rowIndex, style }: { columnIndex: number; rowIndex: number; style: React.CSSProperties }) => {
+    return ({
+      columnIndex,
+      rowIndex,
+      style,
+    }: {
+      columnIndex: number;
+      rowIndex: number;
+      style: React.CSSProperties;
+    }) => {
       const pixelIndex = rowIndex * gridSize + columnIndex;
       const pixel = grid[pixelIndex];
       const backgroundColor = pixel ? pixel.color : "#ffffff";
@@ -156,7 +182,6 @@ const GridComponent: React.FC = () => {
 
   return (
     <div className="relative w-full h-screen bg-gray-100 overflow-visible">
-      {/* Grid Container */}
       <div className="flex items-center justify-center w-full h-full">
         <div className="max-w-full max-h-full">
           <Grid
@@ -172,7 +197,6 @@ const GridComponent: React.FC = () => {
         </div>
       </div>
 
-      {/* Color Picker in the Bottom Left */}
       <div className="fixed bottom-20 left-20 flex items-center space-x-4">
         <Input
           type="text"
@@ -187,23 +211,24 @@ const GridComponent: React.FC = () => {
         />
       </div>
 
-      {hoveredPixel && hoverPosition && createPortal(
-        <div
-          style={{
-            position: 'fixed',
-            top: hoverPosition.y + 10, // Adjust to position below cursor
-            left: hoverPosition.x + 10,
-            backgroundColor: 'white',
-            padding: '8px',
-            borderRadius: '4px',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-            zIndex: 1000,
-          }}
-        >
-          <p>Placed by: {hoveredPixel.user ? hoveredPixel.user.name : "No User"}</p>
-        </div>,
-        document.body
-      )}
+      {hoveredPixel && hoverPosition &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              top: hoverPosition.y + 10,
+              left: hoverPosition.x + 10,
+              backgroundColor: "white",
+              padding: "8px",
+              borderRadius: "4px",
+              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+              zIndex: 1000,
+            }}
+          >
+            <p>Placed by: {hoveredPixel.user ? hoveredPixel.user.name : "No User"}</p>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

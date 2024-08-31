@@ -43,7 +43,7 @@ easy:
 [] Fix styling of input
 
 hard:
-[] Add hover feature on pixel to see who placed it and when
+[X] Add hover feature on pixel to see who placed it and when
 [] Add coverpage for new users. 
     - perhaps what the grid looks like rn + sign in with google to place a pixel!
 [] Understand database truly

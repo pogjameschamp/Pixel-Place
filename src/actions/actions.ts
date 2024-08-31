@@ -12,16 +12,22 @@ export async function addPixel(x: number, y: number, color: string, userId: stri
       throw new Error(`User with ID ${userId} does not exist`);
     }
   
-    // Create the pixel entry if the user exists
-    await prisma.pixel.create({
+    // Create the pixel entry if the user exists and return the created pixel along with user info
+    const pixel = await prisma.pixel.create({
       data: {
         color: color,
         x: x,
         y: y,
-        userId: userId, // This must match a valid userId in the User table
+        userId: userId,
+      },
+      include: {
+        user: true, // Include the user data in the returned pixel object
       },
     });
+  
+    return pixel; // Return the pixel with the associated user data
   }
+  
 
 export async function createUser({ id, name, email }: { id: string, name: string, email: string }) {
   // Check if the user already exists
