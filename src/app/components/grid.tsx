@@ -113,6 +113,9 @@ const GridComponent: React.FC = () => {
       }
 
       if (userId) {
+        console.log("SET TO FALSE")
+        toast({ title: "Pixel Placed", description: "You placed a pixel!", duration: 3000 });
+        setTimeout(() => setCanPlacePixel(true), 10000); // 10 seconds
         addPixel(clickedPixel.x, clickedPixel.y, selectedColorRef.current, userId)
           .then((pixelWithUser) => {
             setGrid((prevGrid) =>
@@ -122,9 +125,6 @@ const GridComponent: React.FC = () => {
                   : pixel
               )
             );
-            console.log("SET TO FALSE")
-            toast({ title: "Pixel Placed", description: "You placed a pixel!", duration: 3000 });
-            setTimeout(() => setCanPlacePixel(true), 10000); // 10 seconds
           })
           .catch((error) => console.error("Failed to add pixel:", error));
       } else {
