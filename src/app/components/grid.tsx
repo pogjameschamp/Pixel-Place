@@ -7,6 +7,8 @@ import { FixedSizeGrid as Grid } from 'react-window';
 import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import debounce from 'lodash/debounce';
+import { useToast } from "@/hooks/use-toast";
+
 
 interface Pixel {
   id: number;
@@ -27,6 +29,8 @@ const GridComponent: React.FC = () => {
   const [hoverPosition, setHoverPosition] = useState<{ x: number, y: number } | null>(null);
   const [currentColor, setCurrentColor] = useState<string>("#000000");
   const selectedColorRef = useRef<string>(currentColor);
+  const [canPlacePixel, setCanPlacePixel] = useState<boolean>(true)
+  const { toast } = useToast()
 
   const loadPixels = useCallback(async () => {
     const cachedPixels = localStorage.getItem('pixels');
@@ -54,40 +58,46 @@ const GridComponent: React.FC = () => {
 
   useEffect(() => {
     loadPixels();
-  
+
     const wsUrl = "wss://rplace-2260a4bfaead.herokuapp.com";
     ws.current = new WebSocket(wsUrl);
-  
+
     ws.current.onmessage = (event) => {
       const updatedPixel: Pixel = JSON.parse(event.data);
       console.log('Received updated pixel:', updatedPixel);
-  
+
       setGrid((prevGrid) =>
         prevGrid.map((pixel) =>
           pixel.x === updatedPixel.x && pixel.y === updatedPixel.y ? updatedPixel : pixel
         )
       );
     };
-  
+
     return () => {
       if (ws.current) {
         ws.current.close();
       }
     };
   }, [loadPixels]);
-  
 
   const handlePixelClick = useCallback(
     (index: number) => {
+
+      if (!canPlacePixel) {
+        toast({ title: "Cooldown", description: "You cannot place another pixel for 10 seconds.", duration: 3000 });
+        console.log("CANT PLACE THE PIXEL!")
+        return;
+      }
+
       const clickedPixel = grid[index];
       const newGrid = [...grid];
       newGrid[index].color = selectedColorRef.current;
       setGrid(newGrid);
       localStorage.setItem("pixels", JSON.stringify(newGrid));
-  
+
       const userId = user?.uid || "";
       const userName = user?.displayName || "Unknown User";
-  
+
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
         ws.current.send(
           JSON.stringify({
@@ -95,16 +105,14 @@ const GridComponent: React.FC = () => {
             x: clickedPixel.x,
             y: clickedPixel.y,
             color: selectedColorRef.current,
-            user: { id: userId, name: userName }, // Send user data along with pixel info
+            user: { id: userId, name: userName },
           })
         );
       }
-  
-      // If you also want to save it to your database via API or another function call
+
       if (userId) {
         addPixel(clickedPixel.x, clickedPixel.y, selectedColorRef.current, userId)
           .then((pixelWithUser) => {
-            // This block is optional if your WebSocket message is fast enough.
             setGrid((prevGrid) =>
               prevGrid.map((pixel) =>
                 pixel.x === pixelWithUser.x && pixel.y === pixelWithUser.y
@@ -112,15 +120,18 @@ const GridComponent: React.FC = () => {
                   : pixel
               )
             );
+            setCanPlacePixel(false);
+            console.log("SET TO FALSE")
+            toast({ title: "Pixel Placed", description: "You placed a pixel!", duration: 3000 });
+            setTimeout(() => setCanPlacePixel(true), 10000); // 10 seconds
           })
           .catch((error) => console.error("Failed to add pixel:", error));
       } else {
         console.error("User ID is not defined");
       }
     },
-    [grid, user]
+    [grid, user, canPlacePixel]
   );
-  
 
   const handleMouseEnter = useCallback(
     (pixel: Pixel, event: React.MouseEvent) => {
@@ -181,8 +192,8 @@ const GridComponent: React.FC = () => {
   }, [grid, handleMouseEnter, handleMouseLeave, handlePixelClick]);
 
   return (
-    <div className="relative w-full h-screen bg-gray-100 overflow-visible">
-      <div className="flex items-center justify-center w-full h-full">
+    <div className="relative w-full h-screen bg-gray-100 overflow-visible flex flex-col justify-center items-center">
+      <div className="flex items-center justify-center">
         <div className="max-w-full max-h-full">
           <Grid
             columnCount={gridSize}
@@ -197,7 +208,8 @@ const GridComponent: React.FC = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-20 left-20 flex items-center space-x-4">
+      {/* Centered Color Picker */}
+      <div className="mt-8 flex items-center space-x-4">
         <Input
           type="text"
           value={currentColor}

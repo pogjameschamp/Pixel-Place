@@ -9,9 +9,13 @@
     "lint": "next lint",
     "postinstall": "prisma generate"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^5.18.0",
     "@radix-ui/react-hover-card": "^1.1.1",
+    "@radix-ui/react-toast": "^1.2.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "firebase": "^10.13.1",
@@ -24,6 +28,7 @@
     "react-window": "^1.8.10",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "ts-node": "^10.9.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {

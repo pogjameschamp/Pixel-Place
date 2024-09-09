@@ -40,13 +40,16 @@ easy:
 [X] Add auth with firebase
 [X] Add Wrapper so that you can only add pixel if logged in
 [X] add small square next to input to show colour
-[] Fix styling of input
+[X] Fix styling of input
 
 hard:
 [X] Add hover feature on pixel to see who placed it and when
-[] Add coverpage for new users. 
-    - perhaps what the grid looks like rn + sign in with google to place a pixel!
-[] Understand database truly
+[X] Understand database truly
     - 1 to 1 relationship, one pixel has one user only
-[] interaction when someone else presses on the pixel.
+[X] interaction when someone else presses on the pixel.
     - does the pixel go away from the first person who pressed it?
+[] filter input with zod so you can only do valid colours
+[] Add coverpage for new users. 
+    - perhaps what the grid looks like rn + sign in with google to place a pixel + current pixel count/current pixel count out of whole grid e.g. 89/360
+[] add a timeout so you cant spam 10 seconds
+
