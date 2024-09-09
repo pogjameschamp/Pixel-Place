@@ -89,6 +89,8 @@ const GridComponent: React.FC = () => {
         return;
       }
 
+      setCanPlacePixel(false);
+
       const clickedPixel = grid[index];
       const newGrid = [...grid];
       newGrid[index].color = selectedColorRef.current;
@@ -120,7 +122,6 @@ const GridComponent: React.FC = () => {
                   : pixel
               )
             );
-            setCanPlacePixel(false);
             console.log("SET TO FALSE")
             toast({ title: "Pixel Placed", description: "You placed a pixel!", duration: 3000 });
             setTimeout(() => setCanPlacePixel(true), 10000); // 10 seconds
