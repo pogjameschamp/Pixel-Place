@@ -18,6 +18,15 @@ interface Pixel {
   user?: { id: string; name: string; email: string } | null;
 }
 
+const LoadingScreen = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-xl font-semibold text-gray-700">Loading pixels...</p>
+    </div>
+  </div>
+);
+
 const GridComponent: React.FC = () => {
   const gridSize = 63;
   const pixelSize = 10;
@@ -31,8 +40,10 @@ const GridComponent: React.FC = () => {
   const selectedColorRef = useRef<string>(currentColor);
   const [canPlacePixel, setCanPlacePixel] = useState<boolean>(true)
   const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadPixels = useCallback(async () => {
+    setIsLoading(true);
     const cachedPixels = localStorage.getItem('pixels');
     if (cachedPixels) {
       setGrid(JSON.parse(cachedPixels));
@@ -54,6 +65,7 @@ const GridComponent: React.FC = () => {
 
     setGrid(newGrid);
     localStorage.setItem('pixels', JSON.stringify(newGrid));
+    setIsLoading(false);
   }, [gridSize, totalPixels]);
 
   useEffect(() => {
@@ -194,54 +206,60 @@ const GridComponent: React.FC = () => {
 
   return (
     <div className="relative w-full h-screen bg-gray-100 overflow-visible flex flex-col justify-center items-center">
-      <div className="flex items-center justify-center">
-        <div className="max-w-full max-h-full">
-          <Grid
-            columnCount={gridSize}
-            columnWidth={pixelSize}
-            height={gridSize * pixelSize}
-            rowCount={gridSize}
-            rowHeight={pixelSize}
-            width={gridSize * pixelSize}
-          >
-            {Cell}
-          </Grid>
-        </div>
-      </div>
+      {isLoading ? (
+        <LoadingScreen />
+      ) : (
+        <>
+          <div className="flex items-center justify-center">
+            <div className="max-w-full max-h-full">
+              <Grid
+                columnCount={gridSize}
+                columnWidth={pixelSize}
+                height={gridSize * pixelSize}
+                rowCount={gridSize}
+                rowHeight={pixelSize}
+                width={gridSize * pixelSize}
+              >
+                {Cell}
+              </Grid>
+            </div>
+          </div>
 
-      {/* Centered Color Picker */}
-      <div className="mt-8 flex items-center space-x-4">
-        <Input
-          type="text"
-          value={currentColor}
-          onChange={(e) => handleColorChange(e.target.value)}
-          placeholder="#ffcccc"
-          className="w-40 h-12 text-lg p-4"
-        />
-        <div
-          className="w-12 h-12 border border-gray-300 rounded-md shadow-md"
-          style={{ backgroundColor: currentColor }}
-        />
-      </div>
+          {/* Centered Color Picker */}
+          <div className="mt-8 flex items-center space-x-4">
+            <Input
+              type="text"
+              value={currentColor}
+              onChange={(e) => handleColorChange(e.target.value)}
+              placeholder="#ffcccc"
+              className="w-40 h-12 text-lg p-4"
+            />
+            <div
+              className="w-12 h-12 border border-gray-300 rounded-md shadow-md"
+              style={{ backgroundColor: currentColor }}
+            />
+          </div>
 
-      {hoveredPixel && hoverPosition &&
-        createPortal(
-          <div
-            style={{
-              position: "fixed",
-              top: hoverPosition.y + 10,
-              left: hoverPosition.x + 10,
-              backgroundColor: "white",
-              padding: "8px",
-              borderRadius: "4px",
-              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
-              zIndex: 1000,
-            }}
-          >
-            <p>Placed by: {hoveredPixel.user ? hoveredPixel.user.name : "No User"}</p>
-          </div>,
-          document.body
-        )}
+          {hoveredPixel && hoverPosition &&
+            createPortal(
+              <div
+                style={{
+                  position: "fixed",
+                  top: hoverPosition.y + 10,
+                  left: hoverPosition.x + 10,
+                  backgroundColor: "white",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+                  zIndex: 1000,
+                }}
+              >
+                <p>Placed by: {hoveredPixel.user ? hoveredPixel.user.name : "No User"}</p>
+              </div>,
+              document.body
+            )}
+        </>
+      )}
     </div>
   );
 };

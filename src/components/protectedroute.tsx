@@ -16,9 +16,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, loading, router, pathname]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return (pathname === '/' || user) ? <>{children}</> : null;
 };
