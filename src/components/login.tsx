@@ -20,7 +20,7 @@ export const Login = () => {
         throw new Error("User or email not found after sign-in");
       }
 
-      // Call the server action using a dedicated approach for server functions
+      // Create user in your database after sign-in
       await createUser({
         id: user.uid,
         name: user.displayName ?? "Anonymous",
@@ -35,9 +35,24 @@ export const Login = () => {
   };
 
   return (
-    <div>
-      <p>Sign in with Google to start placing pixels!</p>
-      <button onClick={signInWithGoogle}>Sign in</button>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-200 via-blue-300 to-gray-200 text-gray-800">
+      <div className="text-center max-w-md mx-auto">
+        <h1 className="text-4xl font-extrabold mb-4">Welcome to PixelPlace!</h1>
+        <p className="text-lg mb-8">
+          Sign in with Google and start placing pixels to create amazing pixel art with the community!
+        </p>
+        
+        <button 
+          onClick={signInWithGoogle} 
+          className="bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 hover:bg-blue-700"
+        >
+          Sign in with Google
+        </button>
+      </div>
+      
+      <div className="absolute bottom-5 text-center text-gray-600 text-sm opacity-70">
+        <p>Join the fun, create your art!</p>
+      </div>
     </div>
   );
 };

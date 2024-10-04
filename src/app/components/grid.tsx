@@ -42,7 +42,7 @@ const GridComponent: React.FC = () => {
     const newGrid: Pixel[] = Array.from({ length: totalPixels }, (_, index) => {
       const x = index % gridSize;
       const y = Math.floor(index / gridSize);
-      const existingPixel = fetchedPixels.find(pixel => pixel.x === x && pixel.y === y);
+      const existingPixel = fetchedPixels.find((pixel: { x: number; y: number; }) => pixel.x === x && pixel.y === y);
       return {
         id: index,
         x,
