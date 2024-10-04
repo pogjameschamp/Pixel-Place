@@ -28,7 +28,7 @@ export const Login = () => {
       });
 
       // Redirect to the client page after successful sign-in
-      router.push('/clientpage');
+      router.push('/canvas');
     } catch (error) {
       console.error('Error signing in with Google:', error);
     }
