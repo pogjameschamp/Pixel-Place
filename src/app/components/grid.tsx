@@ -29,7 +29,7 @@ const LoadingScreen = () => (
 
 const GridComponent: React.FC = () => {
   const gridSize = 63;
-  const pixelSize = 10;
+  const pixelSize = 17.5; // Increased from 10 to 17.5 (1.75 times larger)
   const totalPixels = gridSize * gridSize;
   const [user] = useAuthState(auth);
   const [grid, setGrid] = useState<Pixel[]>([]);
@@ -148,10 +148,12 @@ const GridComponent: React.FC = () => {
 
   const handleMouseEnter = useCallback(
     (pixel: Pixel, event: React.MouseEvent) => {
-      setHoveredPixel(pixel);
-      setHoverPosition({
-        x: event.clientX,
-        y: event.clientY,
+      requestAnimationFrame(() => {
+        setHoveredPixel(pixel);
+        setHoverPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
       });
     },
     []
@@ -204,21 +206,30 @@ const GridComponent: React.FC = () => {
     };
   }, [grid, handleMouseEnter, handleMouseLeave, handlePixelClick]);
 
+  const debouncedHandleMouseEnter = useMemo(
+    () => debounce(handleMouseEnter, 16),
+    [handleMouseEnter]
+  );
+
   return (
-    <div className="relative w-full h-screen bg-gray-100 overflow-visible flex flex-col justify-center items-center">
+    <div className="relative w-full h-screen bg-gray-100 flex flex-col justify-center items-center">
       {isLoading ? (
         <LoadingScreen />
       ) : (
         <>
           <div className="flex items-center justify-center">
-            <div className="max-w-full max-h-full">
+            <div className="max-w-full max-h-full overflow-hidden" style={{ border: 'none' }}>
               <Grid
                 columnCount={gridSize}
                 columnWidth={pixelSize}
-                height={gridSize * pixelSize}
+                height={Math.min(window.innerHeight * 0.8, gridSize * pixelSize)}
                 rowCount={gridSize}
                 rowHeight={pixelSize}
-                width={gridSize * pixelSize}
+                width={Math.min(window.innerWidth * 0.8, gridSize * pixelSize)}
+                style={{
+                  boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+                  overflow: 'hidden',
+                }}
               >
                 {Cell}
               </Grid>
@@ -240,24 +251,24 @@ const GridComponent: React.FC = () => {
             />
           </div>
 
-          {hoveredPixel && hoverPosition &&
-            createPortal(
-              <div
-                style={{
-                  position: "fixed",
-                  top: hoverPosition.y + 10,
-                  left: hoverPosition.x + 10,
-                  backgroundColor: "white",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
-                  zIndex: 1000,
-                }}
-              >
-                <p>Placed by: {hoveredPixel.user ? hoveredPixel.user.name : "No User"}</p>
-              </div>,
-              document.body
-            )}
+          {hoveredPixel && hoverPosition && (
+            <div
+              style={{
+                position: "fixed",
+                top: hoverPosition.y + 10,
+                left: hoverPosition.x + 10,
+                backgroundColor: "white",
+                padding: "8px",
+                borderRadius: "4px",
+                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+                zIndex: 1000,
+                transition: "all 0.1s ease-out",
+                pointerEvents: "none",
+              }}
+            >
+              <p>Placed by: {hoveredPixel.user ? hoveredPixel.user.name : "No User"}</p>
+            </div>
+          )}
         </>
       )}
     </div>
