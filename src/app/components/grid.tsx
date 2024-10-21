@@ -237,18 +237,30 @@ const GridComponent: React.FC = () => {
           </div>
 
           {/* Centered Color Picker */}
-          <div className="mt-8 flex items-center space-x-4">
-            <Input
-              type="text"
-              value={currentColor}
-              onChange={(e) => handleColorChange(e.target.value)}
-              placeholder="#ffcccc"
-              className="w-40 h-12 text-lg p-4"
-            />
-            <div
-              className="w-12 h-12 border border-gray-300 rounded-md shadow-md"
-              style={{ backgroundColor: currentColor }}
-            />
+          <div className="mt-8 color-picker-container p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-2">Choose a color</h3>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <input
+                  type="color"
+                  value={currentColor}
+                  onChange={(e) => handleColorChange(e.target.value)}
+                  className="w-12 h-12 rounded-md cursor-pointer"
+                />
+                <div className="absolute inset-0 rounded-md shadow-inner pointer-events-none"></div>
+              </div>
+              <Input
+                type="text"
+                value={currentColor}
+                onChange={(e) => handleColorChange(e.target.value)}
+                placeholder="#000000"
+                className="w-32 text-center"
+              />
+              <div
+                className="w-12 h-12 rounded-md shadow-md"
+                style={{ backgroundColor: currentColor }}
+              ></div>
+            </div>
           </div>
 
           {hoveredPixel && hoverPosition && (

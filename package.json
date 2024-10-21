@@ -26,6 +26,7 @@
     "react-dom": "^18",
     "react-firebase-hooks": "^5.1.1",
     "react-window": "^1.8.10",
+    "react-zoom-pan-pinch": "^3.6.1",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
