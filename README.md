@@ -25,7 +25,7 @@ A multiplayer pixel-art canvas inspired by Reddit’s r/Place, where users draw 
 | Frontend     | **Next.js (App Router)** + **React** + **Tailwind CSS** + **TypeScript** |
 | Auth & DB    | **Supabase** (PostgreSQL, Auth) + **Prisma ORM**                      |
 | Real-Time    | **WebSocket Server** (`ws` library, Node.js) hosted on **Heroku**     |
-| UX Enhancers | ShadCN/UI (Toasts), debounced hover, hover cards, cooldown display    |
+| UX Styling   | ShadCN/UI (Toasts), debounced hover, hover cards, cooldown display    |
 
 ---
 
