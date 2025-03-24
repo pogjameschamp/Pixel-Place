@@ -230,7 +230,6 @@ const Grid: React.FC = () => {
         )}
       </div>
 
-      {/* Row layout for picker and user info */}
       <div className="flex space-x-4">
         <ColorPicker currentColor={currentColor} onChange={setCurrentColor} />
         {user && (
