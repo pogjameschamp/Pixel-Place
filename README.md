@@ -1,6 +1,6 @@
-# 🧩 Pixel Place – Real-Time Collaborative Pixel Canvas
+# Pixel Place – Real-Time Collaborative Pixel Canvas
 
-Live Demo 👉 [r-place-murex.vercel.app](https://r-place-murex.vercel.app/)
+Try it now! [r-place-murex.vercel.app](https://r-place-murex.vercel.app/)
 
 A multiplayer pixel-art canvas inspired by Reddit’s r/Place, where users draw together in real-time. Built with **Next.js**, **Supabase**, **WebSockets**, and **Tailwind CSS**.
 
@@ -8,17 +8,17 @@ A multiplayer pixel-art canvas inspired by Reddit’s r/Place, where users draw 
 
 ## 🚀 Features
 
-- 🎨 **Collaborative Canvas** – Live multiplayer pixel art using WebSocket server
-- 🕒 **Cooldown Timer** – Prevents spamming pixels with animated visual feedback
-- 🧠 **Optimized UX** – Tooltip on hover, color picker, toast notifications
-- 🔐 **Google Auth** – Users must sign in with Google to place pixels
-- 💾 **Database Persistence** – Pixels and user data stored in Supabase (PostgreSQL)
-- 📡 **Real-Time WebSockets** – Node.js server deployed on Heroku
-- 🧪 **Typed & Scalable** – TypeScript + Prisma ORM
+- **Collaborative Canvas** – Live multiplayer pixel art using WebSocket server
+- **Cooldown Timer** – Prevents spamming pixels with animated visual feedback
+- **Optimized UX** – Tooltip on hover, color picker, toast notifications
+- **Google Auth** – Users must sign in with Google to place pixels
+- **Database Persistence** – Pixels and user data stored in Supabase (PostgreSQL)
+- **Real-Time WebSockets** – Node.js server deployed on Heroku
+- **Typed & Scalable** – TypeScript + Prisma ORM
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 | Layer        | Tech                                                                  |
 |--------------|-----------------------------------------------------------------------|
@@ -26,14 +26,6 @@ A multiplayer pixel-art canvas inspired by Reddit’s r/Place, where users draw 
 | Auth & DB    | **Supabase** (PostgreSQL, Auth) + **Prisma ORM**                      |
 | Real-Time    | **WebSocket Server** (`ws` library, Node.js) hosted on **Heroku**     |
 | UX Enhancers | ShadCN/UI (Toasts), debounced hover, hover cards, cooldown display    |
-
----
-
-## 🖼️ Demo
-
-> [🎯 Try the Live Version](https://r-place-murex.vercel.app)
-
-*(Add a screenshot or screen recording here for extra impact!)*
 
 ---
 
