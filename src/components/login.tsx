@@ -15,7 +15,7 @@ export const Login = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
+      console.log("User after login:", user);
       if (!user || !user.email) {
         throw new Error("User or email not found after sign-in");
       }
@@ -28,7 +28,8 @@ export const Login = () => {
       });
 
       // Redirect to the client page after successful sign-in
-      router.push('/canvas');
+      window.location.href = "/canvas";
+
     } catch (error) {
       console.error('Error signing in with Google:', error);
     }
