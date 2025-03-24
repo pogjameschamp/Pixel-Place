@@ -11,7 +11,7 @@ const CANVAS_WIDTH = 1600;
 const CANVAS_HEIGHT = 900;
 const PIXEL_SIZE = 25;
 const COOLDOWN_SECONDS = 10;
-const ENABLE_COOLDOWN = true;
+const ENABLE_COOLDOWN = false;
 
 const COLUMNS = CANVAS_WIDTH / PIXEL_SIZE;
 const ROWS = CANVAS_HEIGHT / PIXEL_SIZE;
@@ -145,10 +145,11 @@ const Grid: React.FC = () => {
         setCooldownRemaining(COOLDOWN_SECONDS);
       }
 
-      toast({
-        title: "✅ Pixel placed!",
-        description: `You can place another in ${COOLDOWN_SECONDS} seconds.`,
-      });
+      if (ENABLE_COOLDOWN) {
+        const cooldownExpiry = Date.now() + COOLDOWN_SECONDS * 1000;
+        localStorage.setItem("cooldown_expiry", cooldownExpiry.toString());
+        setCooldownRemaining(COOLDOWN_SECONDS);
+      }
     } catch (err) {
       console.error("Error saving pixel:", err);
     }
@@ -242,8 +243,8 @@ const Grid: React.FC = () => {
               <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
                 <h3 className="text-lg font-semibold mb-2">User Stats</h3>
                 <p><strong>Name:</strong> {user.displayName}</p>
-                <p><strong>Email:</strong> {user.email}</p>
                 <p><strong>Pixels Placed:</strong> {userPixelCount}</p>
+                <p><strong>Contribution:</strong> {((userPixelCount / (COLUMNS * ROWS)) * 100).toFixed(2)}%</p>
                 {cooldownRemaining > 0 && (
                   <p className="text-red-500 font-semibold mt-2">
                     Cooldown: {cooldownRemaining}s
