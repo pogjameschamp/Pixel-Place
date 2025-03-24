@@ -1,6 +1,6 @@
 # Pixel Place – Real-Time Collaborative Pixel Canvas
 
-Try it now! [r-place-murex.vercel.app](https://r-place-murex.vercel.app/)
+Deployed now and live at: [r-place-murex.vercel.app](https://r-place-murex.vercel.app/)
 
 A multiplayer pixel-art canvas inspired by Reddit’s r/Place, where users draw together in real-time. Built with **Next.js**, **Supabase**, **WebSockets**, and **Tailwind CSS**.
 
