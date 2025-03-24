@@ -11,6 +11,7 @@ const CANVAS_WIDTH = 1600;
 const CANVAS_HEIGHT = 900;
 const PIXEL_SIZE = 25;
 const COOLDOWN_SECONDS = 10;
+const ENABLE_COOLDOWN = true;
 
 const COLUMNS = CANVAS_WIDTH / PIXEL_SIZE;
 const ROWS = CANVAS_HEIGHT / PIXEL_SIZE;
@@ -33,12 +34,14 @@ const Grid: React.FC = () => {
   const [user] = useAuthState(auth);
   const [userPixelCount, setUserPixelCount] = useState<number>(0);
   const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+
   const ws = useRef<WebSocket | null>(null);
   const hideTimeout = useRef<NodeJS.Timeout | null>(null);
-  const ENABLE_COOLDOWN = false;
 
   useEffect(() => {
     async function load() {
+      setIsLoading(true);
       const fetched = await fetchPixels();
       const newData = [...pixelData];
       let count = 0;
@@ -54,6 +57,7 @@ const Grid: React.FC = () => {
 
       setPixelData(newData);
       setUserPixelCount(count);
+      setIsLoading(false);
     }
 
     if (user) load();
@@ -74,7 +78,6 @@ const Grid: React.FC = () => {
     return () => ws.current?.close();
   }, [user]);
 
-  // Cooldown Timer
   useEffect(() => {
     const checkCooldown = () => {
       const expiry = Number(localStorage.getItem("cooldown_expiry"));
@@ -105,7 +108,6 @@ const Grid: React.FC = () => {
       });
       return;
     }
-    
 
     const x = index % COLUMNS;
     const y = Math.floor(index / COLUMNS);
@@ -142,14 +144,11 @@ const Grid: React.FC = () => {
         localStorage.setItem("cooldown_expiry", cooldownExpiry.toString());
         setCooldownRemaining(COOLDOWN_SECONDS);
       }
-      
-      if (ENABLE_COOLDOWN) {
-        toast({
-          title: "✅ Pixel placed!",
-          description: `You can place another in ${COOLDOWN_SECONDS} seconds.`,
-        });
-      }
-      
+
+      toast({
+        title: "✅ Pixel placed!",
+        description: `You can place another in ${COOLDOWN_SECONDS} seconds.`,
+      });
     } catch (err) {
       console.error("Error saving pixel:", err);
     }
@@ -180,71 +179,81 @@ const Grid: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 space-y-6">
-      <div
-        className="relative bg-white"
-        style={{
-          width: `${CANVAS_WIDTH}px`,
-          height: `${CANVAS_HEIGHT}px`,
-          display: "grid",
-          gridTemplateColumns: `repeat(${COLUMNS}, ${PIXEL_SIZE}px)`,
-          gridTemplateRows: `repeat(${ROWS}, ${PIXEL_SIZE}px)`,
-          border: "1px solid #ccc",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        }}
-      >
-        {Array.from({ length: COLUMNS * ROWS }).map((_, index) => (
+      {isLoading ? (
+        <div className="text-center mt-20">
+          <p className="text-xl font-semibold">🎨 Loading pixel canvas...</p>
+        </div>
+      ) : (
+        <>
           <div
-            key={index}
-            onMouseEnter={(e) => debouncedHandleMouseEnter(index, e)}
-            onMouseLeave={handleMouseLeave}
-            onClick={() => handlePixelClick(index)}
+            className="relative bg-white"
             style={{
-              width: `${PIXEL_SIZE}px`,
-              height: `${PIXEL_SIZE}px`,
-              backgroundColor:
-                hoveredIndex === index ? currentColor : pixelData[index]?.color || "#ffffff",
-              border: "0.5px solid #e5e5e5",
-              transition: "background-color 0.1s ease-in-out",
-              cursor: "pointer",
-            }}
-          />
-        ))}
-
-        {hoveredIndex !== null && hoverPosition && (
-          <div
-            style={{
-              position: "fixed",
-              top: hoverPosition.y + 10,
-              left: hoverPosition.x + 10,
-              backgroundColor: "white",
-              padding: "8px",
-              borderRadius: "4px",
-              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
-              zIndex: 1000,
-              transition: "all 0.1s ease-out",
-              pointerEvents: "none",
+              width: `${CANVAS_WIDTH}px`,
+              height: `${CANVAS_HEIGHT}px`,
+              display: "grid",
+              gridTemplateColumns: `repeat(${COLUMNS}, ${PIXEL_SIZE}px)`,
+              gridTemplateRows: `repeat(${ROWS}, ${PIXEL_SIZE}px)`,
+              border: "1px solid #ccc",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}
           >
-            <p>Placed by: {hoveredUser ?? "No User"}</p>
-          </div>
-        )}
-      </div>
+            {Array.from({ length: COLUMNS * ROWS }).map((_, index) => (
+              <div
+                key={index}
+                onMouseEnter={(e) => debouncedHandleMouseEnter(index, e)}
+                onMouseLeave={handleMouseLeave}
+                onClick={() => handlePixelClick(index)}
+                style={{
+                  width: `${PIXEL_SIZE}px`,
+                  height: `${PIXEL_SIZE}px`,
+                  backgroundColor:
+                    hoveredIndex === index ? currentColor : pixelData[index]?.color || "#ffffff",
+                  border: "0.5px solid #e5e5e5",
+                  transition: "background-color 0.1s ease-in-out",
+                  cursor: "pointer",
+                }}
+              />
+            ))}
 
-      <div className="flex space-x-4">
-        <ColorPicker currentColor={currentColor} onChange={setCurrentColor} />
-        {user && (
-          <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-2">User Stats</h3>
-            <p><strong>Name:</strong> {user.displayName}</p>
-            <p><strong>Pixels Placed:</strong> {userPixelCount}</p>
-            {cooldownRemaining > 0 && (
-              <p className="text-red-500 font-semibold mt-2">
-                Cooldown: {cooldownRemaining}s
-              </p>
+            {hoveredIndex !== null && hoverPosition && (
+              <div
+                style={{
+                  position: "fixed",
+                  top: hoverPosition.y + 10,
+                  left: hoverPosition.x + 10,
+                  backgroundColor: "white",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+                  zIndex: 1000,
+                  transition: "all 0.1s ease-out",
+                  pointerEvents: "none",
+                }}
+              >
+                <p>Placed by: {hoveredUser ?? "No User"}</p>
+              </div>
             )}
           </div>
-        )}
-      </div>
+
+          {/* Color picker + user info */}
+          <div className="flex space-x-4">
+            <ColorPicker currentColor={currentColor} onChange={setCurrentColor} />
+            {user && (
+              <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
+                <h3 className="text-lg font-semibold mb-2">User Stats</h3>
+                <p><strong>Name:</strong> {user.displayName}</p>
+                <p><strong>Email:</strong> {user.email}</p>
+                <p><strong>Pixels Placed:</strong> {userPixelCount}</p>
+                {cooldownRemaining > 0 && (
+                  <p className="text-red-500 font-semibold mt-2">
+                    Cooldown: {cooldownRemaining}s
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
